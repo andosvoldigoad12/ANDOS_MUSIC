@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16272E"/>
+      <stop offset="100%" stop-color="#0B1418"/>
+    </linearGradient>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D9E8"/>
+      <stop offset="100%" stop-color="#00AFC1"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="16" fill="url(#bgGrad)" stroke="#1F363F" stroke-width="2"/>
+  <!-- Playlist Lines & Note -->
+  <g transform="translate(100, 110)">
+    <rect x="0" y="20" width="130" height="12" rx="6" fill="#00D9E8"/>
+    <rect x="0" y="55" width="130" height="12" rx="6" fill="#00D9E8" opacity="0.8"/>
+    <rect x="0" y="90" width="90" height="12" rx="6" fill="#00D9E8" opacity="0.6"/>
+    <!-- Note -->
+    <path d="M160 30 v90 a22 22 0 1 1 -14 -20.5 v-57.5 l48 -12 v69.5 a22 22 0 1 1 -14 -20.5 v-58 z" fill="url(#iconGrad)"/>
+  </g>
+  <text x="200" y="320" text-anchor="middle" fill="#FFFFFF" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">MY PLAYLIST</text>
+  <text x="200" y="345" text-anchor="middle" fill="#A0B4BA" font-family="system-ui, -apple-system, sans-serif" font-size="13" letter-spacing="2">ANDOSMUSIC</text>
+</svg>
+
