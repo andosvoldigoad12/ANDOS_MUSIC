@@ -107,6 +107,11 @@ Route::middleware(['auth', 'active', 'role:admin,super_admin'])->prefix('admin')
 Route::middleware(['auth', 'active', 'role:super_admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
 
+    // All Users Management (role change, status toggle)
+    Route::get('/users', [SuperAdminController::class, 'allUsers'])->name('users.index');
+    Route::put('/users/{id}/role', [SuperAdminController::class, 'updateUserRole'])->name('users.update-role');
+    Route::post('/users/{id}/toggle', [SuperAdminController::class, 'toggleAllUserStatus'])->name('users.toggle');
+
     // Manage Admins
     Route::get('/admins', [SuperAdminController::class, 'manageAdmins'])->name('admins');
     Route::post('/admins', [SuperAdminController::class, 'storeAdmin'])->name('admins.store');

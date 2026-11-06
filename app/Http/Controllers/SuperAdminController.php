@@ -65,7 +65,96 @@ class SuperAdminController extends Controller
         ));
     }
 
+    // =========================================================================
+    // All Users Management (Super Admin exclusive)
+    // =========================================================================
+    public function allUsers(Request $request)
+    {
+        $query = User::where('role', '!=', 'super_admin');
+
+        if ($search = $request->input('q')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($role = $request->input('role')) {
+            $query->where('role', $role);
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $users = $query->withCount(['music', 'playlists'])->latest()->paginate(15)->withQueryString();
+
+        return view('superadmin.users.index', compact('users'));
+    }
+
+    public function updateUserRole(Request $request, $id)
+    {
+        $targetUser = User::findOrFail($id);
+        $currentUser = Auth::user();
+
+        // Super Admin cannot change their own role
+        if ($targetUser->id === $currentUser->id) {
+            abort(403, 'Anda tidak dapat mengubah role akun Anda sendiri.');
+        }
+
+        // Super Admin cannot change other Super Admin's role via this route
+        if ($targetUser->isSuperAdmin()) {
+            abort(403, 'Tidak dapat mengubah role Super Admin melalui fitur ini.');
+        }
+
+        $validated = $request->validate([
+            'role' => ['required', 'in:user,admin'],
+        ]);
+
+        $oldRole = $targetUser->role;
+        $newRole = $validated['role'];
+
+        if ($oldRole === $newRole) {
+            return back()->with('info', "Role {$targetUser->name} sudah '{$newRole}', tidak ada perubahan.");
+        }
+
+        $targetUser->role = $newRole;
+        $targetUser->save();
+
+        ActivityLog::log(
+            'CHANGE_ROLE',
+            "Role akun {$targetUser->name} ({$targetUser->email}) diubah dari '{$oldRole}' menjadi '{$newRole}' oleh {$currentUser->name}."
+        );
+
+        $roleLabel = $newRole === 'admin' ? 'Admin' : 'User';
+        return back()->with('success', "Role {$targetUser->name} berhasil diubah menjadi {$roleLabel}.");
+    }
+
+    public function toggleAllUserStatus($id)
+    {
+        $targetUser = User::findOrFail($id);
+        $currentUser = Auth::user();
+
+        // Super Admin cannot deactivate other Super Admins through this route
+        if ($targetUser->isSuperAdmin()) {
+            abort(403, 'Gunakan halaman Kelola Super Admin untuk mengubah status Super Admin.');
+        }
+
+        $newStatus = $targetUser->status === 'active' ? 'inactive' : 'active';
+        $targetUser->status = $newStatus;
+        $targetUser->save();
+
+        ActivityLog::log(
+            'TOGGLE_USER_STATUS',
+            "Status akun {$targetUser->name} ({$targetUser->email}) diubah menjadi {$newStatus} oleh {$currentUser->name}."
+        );
+
+        return back()->with('success', "Status akun {$targetUser->name} berhasil diubah menjadi {$newStatus}.");
+    }
+
+    // =========================================================================
     // Manage Admins
+    // =========================================================================
     public function manageAdmins()
     {
         $admins = User::where('role', 'admin')->latest()->paginate(15);

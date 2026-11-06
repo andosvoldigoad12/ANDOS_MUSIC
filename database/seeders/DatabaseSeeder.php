@@ -18,6 +18,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Pengaman: Larang Seeder berjalan di environment production
+        if (app()->isProduction()) {
+            $this->command->error(
+                'DatabaseSeeder tidak boleh dijalankan di environment production.'
+            );
+            $this->command->error(
+                'Seeder hanya diperbolehkan di development atau local untuk data demo.'
+            );
+            throw new \Exception('DatabaseSeeder diblokir: environment production terdeteksi.');
+        }
+
         // 1. Seed Website Settings
         WebsiteSetting::set('site_name', 'AM (AndosMusic)');
         WebsiteSetting::set('tagline', 'Your Music, Your World.');
@@ -25,8 +36,11 @@ class DatabaseSeeder extends Seeder
         WebsiteSetting::set('announcement', 'Selamat datang di AndosMusic! Platform streaming musik & berbagi musik masa depan.');
 
         // 2. Seed Users
-        $superAdminPassword = env('SUPER_ADMIN_PASSWORD', 'Admin123!');
-        $superAdmin = User::updateOrCreate(
+        $superAdminPassword = env('SUPER_ADMIN_PASSWORD');
+        if (!$superAdminPassword) {
+            throw new \Exception('Environment variable SUPER_ADMIN_PASSWORD harus di-set sebelum menjalankan seeder.');
+        }
+        $superAdmin = User::firstOrCreate(
             ['email' => 'superadmin@andosmusic.com'],
             [
                 'name' => 'Super Administrator',
@@ -37,38 +51,50 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@andosmusic.com'],
-            [
-                'name' => 'Content Moderator Admin',
-                'password' => Hash::make('Admin123!'),
-                'role' => 'admin',
-                'status' => 'active',
-                'bio' => 'Moderator konten dan kurator playlist AndosMusic.',
-            ]
-        );
+        // Admin demo — hanya dibuat jika env tersedia, tidak menimpa password existing
+        $adminPassword = env('SEEDER_ADMIN_PASSWORD');
+        if ($adminPassword) {
+            User::firstOrCreate(
+                ['email' => 'admin@andosmusic.com'],
+                [
+                    'name' => 'Content Moderator Admin',
+                    'password' => Hash::make($adminPassword),
+                    'role' => 'admin',
+                    'status' => 'active',
+                    'bio' => 'Moderator konten dan kurator playlist AndosMusic.',
+                ]
+            );
+        }
 
-        $user = User::updateOrCreate(
-            ['email' => 'user@andosmusic.com'],
-            [
-                'name' => 'Dimas Andos',
-                'password' => Hash::make('User123!'),
-                'role' => 'user',
-                'status' => 'active',
-                'bio' => 'Music lover, sound engineer & synthesizer enthusiast.',
-            ]
-        );
+        // User demo — hanya dibuat jika env tersedia, tidak menimpa password existing
+        $userPassword = env('SEEDER_USER_PASSWORD');
+        if ($userPassword) {
+            User::firstOrCreate(
+                ['email' => 'user@andosmusic.com'],
+                [
+                    'name' => 'Dimas Andos',
+                    'password' => Hash::make($userPassword),
+                    'role' => 'user',
+                    'status' => 'active',
+                    'bio' => 'Music lover, sound engineer & synthesizer enthusiast.',
+                ]
+            );
+        }
 
-        $artist = User::updateOrCreate(
-            ['email' => 'artistan@andosmusic.com'],
-            [
-                'name' => 'Luna Melody',
-                'password' => Hash::make('User123!'),
-                'role' => 'user',
-                'status' => 'active',
-                'bio' => 'Indie producer & songwriter from Jakarta.',
-            ]
-        );
+        // Artist demo — hanya dibuat jika env tersedia, tidak menimpa password existing
+        $artistPassword = env('SEEDER_ARTIST_PASSWORD');
+        if ($artistPassword) {
+            User::firstOrCreate(
+                ['email' => 'artistan@andosmusic.com'],
+                [
+                    'name' => 'Luna Melody',
+                    'password' => Hash::make($artistPassword),
+                    'role' => 'user',
+                    'status' => 'active',
+                    'bio' => 'Indie producer & songwriter from Jakarta.',
+                ]
+            );
+        }
 
         // Ensure directories exist
         File::ensureDirectoryExists(storage_path('app/public/music'));
